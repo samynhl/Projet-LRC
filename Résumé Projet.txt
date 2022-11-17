@@ -1,0 +1,16 @@
+**************************************************************************
+Ecriture en Prolog d’un démonstrateur basé sur l’algorithme
+des tableaux pour la logique de description ALC
+**************************************************************************
+- Rappels :
+  I   Logique de description ALC
+  II  Algorithme des tableaux pour la logique ALC
+  III Le prédicat cut (noté '!') en Prolog (Importante)
+
+- Partie 01:- Etape préliminaire de vérification et de mise en
+forme de la Tbox et de la Abox:
+
+
+
+	
+    
