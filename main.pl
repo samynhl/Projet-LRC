@@ -26,8 +26,8 @@ programme :-
 
 % ##########################################################################################
 
-% Cette methode permet de creer des listes qui vont contenir la TBox, la ABox d'instances et la ABox de rôles.
-% Ces listes evolueront au fur et à mesure qu'on soumettra des propositions à la démonstration.
+% Cette methode permet de creer des listes qui vont contenir la TBox, la ABox d instances et la ABox de rôles.
+% Ces listes evolueront au fur et à mesure qu on soumettra des propositions à la démonstration.
 premiere_etape(Tbox, Abi, Abr) :-
     setof((X, Y), equiv(X, Y), Tbox),
     nl, write('Tbox = '), write(Tbox), nl,
@@ -77,6 +77,12 @@ suite(R,Abi,Abi1,Tbox) :-
 % ------------------------------------------------------------------------------------------
 % On met en place les methodes utilisées plus haut
 % ------------------------------------------------------------------------------------------
+lect([]).
+lect([X|L]):- read(X), X \= fin, !, lect(L).
+
+/*concat/3 : concatene les deux listes L1 et L2 dans L3.*/
+concatene([],L1,L1).
+concatene([X|Y],L1,[X|L2]) :- concatene(Y,L1,L2).
 
 % Méthode permettant l acquisition de propositions du type 1 (I : C)
 acquisition_prop_type1(Abi,Abi1,Tbox) :-
@@ -92,17 +98,18 @@ acquisition_prop_type1(Abi,Abi1,Tbox) :-
     nl, read(C),
 
     % On effectue une vérification sur le concept
-    verificationConcept(C),
+    % verificationConcept(C)
 
     % On effectue les manipulations sur le concept
     % On le remplace (RC) puis on effectue sa négation (NRC)
-    traitement_Abox([I,C],(I,Ctraitennf)),
+    traitement_Abox([I,C],Ctraitennf),
 
-    % On ajoute l élément (I, NRC) à la ABox
-    ajout([((I,Ctraitennf))],Abi,Abi1).
+    nl, write(Ctraitennf),
+
+    % On ajoute l élément (I, Ctraitennf) à la ABox
+    concatene([Ctraitennf], Abi,Abi1).
 
 % ------------------------------------------------------------------------------------------
-
 % Méthode permettant l acquisition de proposition du type 2 : (C1 and C2 compris dans 'neg')
 acquisition_prop_type2(Abi,Abi1,Tbox) :-
     % On entre le concept 1
@@ -110,27 +117,27 @@ acquisition_prop_type2(Abi,Abi1,Tbox) :-
     nl, read(C1),
 
     % On effectue une vérification sur le concept 1
-    verificationConcept(C1),
+    % verification_type2(C1),
 
     % On entre le concept 2
     nl, write('Veuillez entrer le concept 2 :'),
     nl, read(C2),
-
     % On effectue une vérification sur le concept 2
-    verificationConcept(C2),
-
+    verification_type2([C1,C2]),
     % On effectue les manipulations sur les concepts
     % On effectue le remplacement (RC) puis on on effectue sa négation (NRC)
-    replace(and(C1, C2), RC),
+    traitement_Tbox([C1,C2], RC),
+    nl, write(RC),
     nnf(RC, NRC),
-
+    nl, write(NRC),
     % On génère une instance et on ajoute l élément (I : C1 and C2) à la ABox
-    genere(Inst),
-    concat([((Inst,NRC))], Abi, Abi1).
+    ajout2(NRC,Abi,Abi1).
 
+ajout2((C1traite,C2traite),Abi,Abi1) :- genere(Nom),
+                                        concatene([(Nom,and(C1traite,C2traite))],Abi,Abi1).
 % ##########################################################################################
 
-  PARTIE 3
+%  PARTIE 3
 
 % ##########################################################################################
 
@@ -139,7 +146,7 @@ troisieme_etape(Abi,Abr) :-
     tri_Abox(Abi,Lie,Lpt,Li,Lu,Ls),
     affiche_evolution_Abox(Lie,Lpt,Li,Li,Ls,Abr),
     resolution(Lie,Lpt,Li,Lu,Ls,Abr),
-    nl,write('Youpiiiiii, on a demontre la proposition initiale !!!').
+    nl,write('Demonstration reussite ~~').
 
 % ##########################################################################################
 
@@ -217,6 +224,7 @@ nnf(X,X).
 % ------------------------------------------------------------------------------------------
 
 % Règles de création de concepts : prédicat concept
+/*
 concept(and(C1,C2)) :- concept(C1), concept(C2), !.
 concept(or(C1,C2)) :- concept(C1), concept(C2), !.
 concept(all(R,C)) :- concept(C) ,concept(R), !.
@@ -225,6 +233,16 @@ concept(not(C)) :- concept(C) ,!.
 concept(C) :- cnamea(C), !.
 concept(C) :- rname(C), !.
 concept(C) :- cnamena(C), !.
+*/
+
+/* Verification syntaxique et semantique */
+concept([not(C)|_]) :- concept([C]),!.
+concept([and(C1,C2)|_]) :- concept([C1]),concept([C2]),!.
+concept([or(C1,C2)|_]) :- concept([C1]),concept([C2]),!.
+concept([some(R,C)|_]) :- rname(R),concept([C]),!.
+concept([all(R,C)|_]) :- rname(R),concept([C]),!.
+concept([C|_]) :- setof(X,cnamea(X),L),member(C,L),!.
+concept([C|_]) :- setof(X,cnamena(X),L),member(C,L),!.
 
 % ------------------------------------------------------------------------------------------
 
@@ -234,14 +252,13 @@ concept(C) :- cnamena(C), !.
 % ------------------------------------------------------------------------------------------
 
 % Règles de remplacement (replace_concept_na)
-replace_concept_na(C,C) :- cnamea(C).
-replace_concept_na(not(C),not(RC)) :- replace_concept_na(C,RC).
-replace_concept_na(and(C1,C2),and(RC1,RC2)) :- replace_concept_na(C1,RC1), replace_concept_na(C2,RC2).
-replace_concept_na(or(C1,C2),or(RC1,RC2)) :- replace_concept_na(C1,RC1), replace_concept_na(C2,RC2).
-replace_concept_na(all(R,C),all(R,RC)) :- replace_concept_na(C,RC).
-replace_concept_na(some(R,C),some(R,RC)) :- replace_concept_na(C,RC).
-replace_concept_na(C,RC) :- equiv(C,C2), replace_concept_na(C2,RC).
-
+replace_concept_na([not(C)|_],not(Ctraite)) :- replace_concept_na([C],Ctraite).
+replace_concept_na([and(C1,C2)|_],and(C1traite,C2traite)) :- replace_concept_na([C1],C1traite),replace_concept_na([C2],C2traite), !.
+replace_concept_na([or(C1,C2)|_],or(C1traite,C2traite)) :- replace_concept_na([C1],C1traite),replace_concept_na([C2],C2traite), !.
+replace_concept_na([some(R,C)|_],some(R,Ctraite)) :- replace_concept_na([C],Ctraite), !.
+replace_concept_na([all(R,C)|_],all(R,Ctraite)) :- replace_concept_na([C],Ctraite), !.
+replace_concept_na([C|_],C) :- cnamea(C), !.
+replace_concept_na([C|_],Ctraite) :- cnamena(C),equiv(C,Ctraite), !.
 
 % Traitement sémantique de la Tbox (prédicat traitement_Tbox)
 traitement_Tbox([],(_,_)).
@@ -259,7 +276,6 @@ traitement_Abox([I|C],(I,Ctraitennf)) :- replace_concept_na(C,Ctraite), nnf(not(
 ajout(Ptraitennf,Abi,Abi1) :- concat([Ptraitennf],Abi,Abi1).
 
 % ------------------------------------------------------------------------------------------
-
 % Prédicat réalisant la suppression de X de la liste L1 et renvoie la liste résultante L2
 enleve(X,[X|L],L) :- !.
 enleve(X,[Y|L],[Y|L2]) :- enleve(X,L,L2).
@@ -298,12 +314,21 @@ chiffre_car(7,'7').
 chiffre_car(8,'8').
 chiffre_car(9,'9').
 
+
 % ------------------------------------------------------------------------------------------
+% Vérification des données en entée
+% ------------------------------------------------------------------------------------------
+% Vérification entrée type 1
+verification_type1([I|C]) :- iname(I),concept(C).
+
+% Vérification entrée type 2
+verification_type2([]).
+verification_type2([C1|C2]) :- concept([C1]),verification_type2(C2).
+
 
 % Prédicat de vérification sur les instances
 verificationInstance(I) :-
     iname(I), !.
-
 % ------------------------------------------------------------------------------------------
 
 % Prédicat de vérification sur les concepts

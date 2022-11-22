@@ -1,0 +1,138 @@
+/* Prédicat concept */w
+concept(L)
+concept/1 est un prédicat qui vérifie que le premier que le premier de la liste L est un concept valide (sémantiquement
+et syntaxiquement).
+Jeu de tests :
+?- concept([personne]).
+true.
+
+?- concept([chien]).
+false.
+
+?- concept([livre]).
+true.
+
+?- concept([maman]).
+false.
+
+/* remplacement des concepts non atomiques  */
+replace_concept_na/2 met dans R la définition du concept non atomique.
+
+Jeu de tests :
+?- replace_concept_na([objet],R).
+R = objet ;
+false.
+
+?- replace_concept_na([auteur],R).
+R = and(personne, some(aEcrit, livre)) ;
+false.
+
+?- replace_concept_na([or(some(aEnfant,auteur)],sculpteur),R).
+R = or(some(aEnfant, and(personne, some(aEcrit, livre))), and(personne, some(aCree, sculpture))) ;
+false.
+
+/* Vérification instance */
+
+/* traitement_Abox */
+?- traitement_Abox([michelAnge,personne],Ptraitennf).
+Ptraitennf = (michelAnge, not(personne)).
+
+?- traitement_Abox([michelAnge,sculpteur],Ptraitennf).
+Ptraitennf = (michelAnge, or(not(personne), all(aCree, not(sculpture)))).
+
+/* traitement_Tbox */
+?- traitement_Tbox([personne,auteur],Ptraite).
+Ptraite = (personne, and(personne, some(aEcrit, livre))).
+
+?- traitement_Tbox([personne,or(parent,sculpteur)],Ptraite).
+Ptraite = (personne, or(and(personne, some(aEnfant, anything)), and(personne, some(aCree, sculpture)))).
+
+verification_type1(P)
+verification_type1/1 vérifie que le premier élément de P est bien l’identificateur d’une instance et que
+le deuxième est un concept valide (en utilisant concept).
+Jeu de tests :
+% Execution Aborted
+?- verification_type1([joconde,o]).
+false.
+?- verification_type1([joconde,objet]).
+true.
+?- verification_type1([david,and(parent,auteur)]).
+true.
+
+/* verification_type2(P) */
+verification_type2/1 vérifie que les éléments contenus dans la liste P sont bien des concepts valides par rapport à 
+la définition des concepts (en utilisant concept).
+Jeu de tests :
+?- verification_type2([sculpture,obj]).
+false.
+
+?- verification_type2([personne,objet]).
+true.
+
+?- verification_type2([or(some(aEcrit,livre),all(aCree,sculpture)),parent]).
+true.
+
+
+?- programme.
+
+M1 DAC - PROJET LRC - Samy NEHLIL et Allaa BOUTALEB
+
+--------------------------------------- Premiere partie ---------------------------------------
+
+Tbox = [(auteur,and(personne,some(aEcrit,livre))),(editeur,and(personne,and(not(some(aEcrit,livre)),some(aEdite,livre)))),(parent,and(personne,some(aEnfant,anything))),(sculpteur,and(personne,some(aCree,sculpture)))]
+
+Abi = [(david,sculpture),(joconde,objet),(michelAnge,personne),(socrate,personne),(sonnets,livre),(vinci,personne)]
+
+Abr = [(michelAnge,david,aCree),(michelAnge,sonnets,aEcrit),(vinci,joconde,aCree)]
+
+--------------------------------------- Deuxieme partie ---------------------------------------
+
+Entrer le numero du type de proposition que l"on souhaite demontrer :
+        Type 1 - Une instance donnee appartient a un concept donne.
+        Type 2 - Deux concepts n-elements en commun dont l"intersection est vide (negation).
+|: 1.
+
+Veuillez entrer l"instance :
+|: michelAnge.
+
+Veuillez entrer le concept :
+|: some(aEcrit, livre).
+
+michelAnge,all(aEcrit,not(livre))
+--------------------------------------- Troisieme partie ---------------------------------------
+
+###################################################################################
+
+Liste Abi :
+        michelAnge : all.aEcrit.not livre
+        david : sculpture
+        joconde : objet
+        michelAnge : personne
+        socrate : personne
+        sonnets : livre
+        vinci : personne
+
+Liste Abr :
+        <michelAnge, david> : aCree
+        <michelAnge, sonnets> : aEcrit
+        <vinci, joconde> : aCree
+###################################################################################
+
+Liste Abi :
+        michelAnge : all.aEcrit.not livre
+        david : sculpture
+        joconde : objet
+        michelAnge : personne
+        socrate : personne
+        sonnets : livre
+        vinci : personne
+
+Liste Abr :
+        <michelAnge, david> : aCree
+        <michelAnge, sonnets> : aEcrit
+        <vinci, joconde> : aCree
+
+Demonstration reussite !!!
+true.
+
+

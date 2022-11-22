@@ -11,9 +11,9 @@ nonmember(Arg,[Arg|_]) :- !,fail.
 nonmember(Arg,[_|Tail]) :- !, nonmember(Arg,Tail).
 nonmember(_,[]).
 
-/*concat/3 : concat les deux listes L1 et L2 dans L3.*/
-concat([],L1,L1).
-concat([X|Y],L1,[X|L2]) :- concat(Y,L1,L2).
+% concat/3 : concat les deux listes L1 et L2 dans L3.
+concatene([],L1,L1).
+concatene([X|Y],L1,[X|L2]) :- concatene(Y,L1,L2).
 
 /*enleve/3 : supprime  X  de  la  liste  L1  et  renvoie  la  liste  résultante  dans  L2.*/
 enleve(X,[X|L],L) :-!.
@@ -239,7 +239,7 @@ troisieme_etape(Abi,Abr) :- tri_Abox(Abi,Lie,Lpt,Li,Lu,Ls),
                             resolution(Lie,Lpt,Li,Lu,Ls,Abr),
                             nl, write('Youpiiiiii, on a demontre la proposition initiale !!!').
 
-tri_Abox([],[],[],[],[],[]). /*cas d'arrêt*/
+tri_Abox([],[],[],[],[],[]). /*cas d arrêt*/
 tri_Abox([(I,some(R,C))|T],LieNew,Lpt,Li,Lu,Ls) :- concat([(I,some(R,C))],Lie,LieNew), tri_Abox(T,Lie,Lpt,Li,Lu,Ls),!. /*some -> Lie*/
 tri_Abox([(I,all(R,C))|T],Lie,LptNew,Li,Lu,Ls) :- concat([(I,all(R,C))],Lpt,LptNew), tri_Abox(T,Lie,Lpt,Li,Lu,Ls),!. /*all -> Lpt*/
 tri_Abox([(I,and(C1,C2))|T],Lie,Lpt,LiNew,Lu,Ls) :- concat([(I,and(C1,C2))],Li,LiNew), tri_Abox(T,Lie,Lpt,Li,Lu,Ls),!. /*and -> Li*/
@@ -305,7 +305,7 @@ evolue((I,C),Lie,Lpt,Li,Lu,Ls,Lie,Lpt,Li,Lu,Ls1):- concat([(I,C)],Ls,Ls1),!.
 
 complete_some([(I,some(R,C))|Tie],Lpt,Li,Lu,Ls,Abr) :- generer(B), /*on cree un nouvel objet B*/
                                                        concat([(I,B,R)],Abr,AbrNew), /*on ajoute (I,B,R) dans Abr*/
-                                                       evolue((B,C),Tie,Lpt,Li,Lu,Ls,Lie1,Lpt1,Li1,Lu1,Ls1), /*l'ajout de (B,C) depend de la nature de C*/
+                                                       evolue((B,C),Tie,Lpt,Li,Lu,Ls,Lie1,Lpt1,Li1,Lu1,Ls1), /*l ajout de (B,C) depend de la nature de C*/
                                                        affiche_evolution_Abox(Ls,[(I,some(R,C))|Tie], Lpt, Li, Lu ,Abr, Ls1, Lie1, Lpt1, Li1, Lu1, AbrNew),
                                                        resolution(Lie1,Lpt1,Li1,Lu1,Ls1,AbrNew). /*on boucle*/
 
