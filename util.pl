@@ -15,6 +15,9 @@ nonmember(_,[]).
 concatene([],L1,L1).
 concatene([X|Y],L1,[X|L2]) :- concatene(Y,L1,L2).
 
+% ————————————————————————————————————————
+
+
 /*enleve/3 : supprime  X  de  la  liste  L1  et  renvoie  la  liste  résultante  dans  L2.*/
 enleve(X,[X|L],L) :-!.
 enleve(X,[Y|L],[Y|L2]) :- enleve(X,L,L2).
@@ -218,6 +221,7 @@ acquisition_prop_type2(Abi,Abi1,Tbox) :-
   lecture(P), /*P=[C1,C2] où C1 et C2 sont des concepts. */
   correction2(P),  /*verification syntaxique et semantique*/
   traitement2(P,Ptraite), /*P=[C1,C2], Ptraite = P où on a remplacé les concepts complexes par leur définition*/
+  nl, write(Ptraite),
   ajout2(Ptraite,Abi,Abi1). /*ajout dans Abi1*/
 
 correction2([]).
@@ -229,7 +233,35 @@ traitement2([C1|C2],(C1traite,C2traite)) :- remplace_concepts_complexes([C1],C1t
                                             traitement2(C2,(C1traite,C2traite)).
 
 ajout2((C1traite,C2traite),Abi,Abi1) :- genere(Nom),
-                                        concat([(Nom,and(C1traite,C2traite))],Abi,Abi1).
+                                        concatene([(Nom,and(C1traite,C2traite))],Abi,Abi1).
+
+/*genere/1 : génère un nouvel identificateur qui est fourni en sortie dans Nom.*/
+genere(Nom) :- compteur(V),nombre(V,L1),
+               concat([105,110,115,116],L1,L2),
+               V1 is V+1,
+               dynamic(compteur/1),
+               retract(compteur(V)),
+               dynamic(compteur/1),
+               assert(compteur(V1)),nl,nl,nl,
+               name(Nom,L2).
+
+nombre(0,[]).
+nombre(X,L1) :- R is (X mod 10),
+                Q is ((X-R)//10),
+                chiffre_car(R,R1),
+                char_code(R1,R2),
+                nombre(Q,L),
+                concat(L,[R2],L1).
+chiffre_car(0,'0').
+chiffre_car(1,'1').
+chiffre_car(2,'2').
+chiffre_car(3,'3').
+chiffre_car(4,'4').
+chiffre_car(5,'5').
+chiffre_car(6,'6').
+chiffre_car(7,'7').
+chiffre_car(8,'8').
+chiffre_car(9,'9').
 
 
 /* PARTIE 3 : DEMONSTRATION DE LA PROPOSITION */
