@@ -373,28 +373,35 @@ chiffre_car(9,'9').
 
 % ##########################################################################################
 
-troisieme_etape(Abi,Abr) :- tri_Abox(Abi,Lie,Lpt,Li,Lu,Ls),
-                            write("Debut de la resolution\n"),
+troisieme_etape(Abi,Abr) :- 
+                            tri_Abox(Abi,Lie,Lpt,Li,Lu,Ls),
                             resolution(Lie,Lpt,Li,Lu,Ls,Abr),
-                            nl, write('Demonstration reussite ~~').
+                            nl,write('Youpiiiiii, on a demontre la 
+                            proposition initiale !!!').
 
 % Le prédicat tri_Abox, à partir de la liste des assertions de concepts de la Abox étendue 
 tri_Abox([],[],[],[],[],[]). /*cas d arrêt*/
 % some -> Lie
+% Si une expression de type (I,some(R,C)) est rencontre on lajoute à Lie
 tri_Abox([(I,some(R,C))|T],LieNew,Lpt,Li,Lu,Ls) :- concatene([(I,some(R,C))],Lie,LieNew), tri_Abox(T,Lie,Lpt,Li,Lu,Ls),!.
 % all -> Lpt
+% Si une expression de type (I,all(R,C)) est rencontre on lajoute à Lpt
 tri_Abox([(I,all(R,C))|T],Lie,LptNew,Li,Lu,Ls) :- concatene([(I,all(R,C))],Lpt,LptNew), tri_Abox(T,Lie,Lpt,Li,Lu,Ls),!.
 % and -> Li
+% Si une expression de type (I,and(C1,C2)) est rencontre on lajoute à Li
 tri_Abox([(I,and(C1,C2))|T],Lie,Lpt,LiNew,Lu,Ls) :- concatene([(I,and(C1,C2))],Li,LiNew), tri_Abox(T,Lie,Lpt,Li,Lu,Ls),!.
 % or -> Lu
+% Si une expression de type (I,or(C1,C2)) est rencontre on lajoute à Lu
 tri_Abox([(I,or(C1,C2))|T],Lie,Lpt,Li,LuNew,Ls) :- concatene([(I,or(C1,C2))],Lu,LuNew), tri_Abox(T,Lie,Lpt,Li,Lu,Ls),!.
 % not(concept) -> Ls
+% Si une expression de type (I,not(C)) est rencontre on lajoute à Ls
 tri_Abox([(I,not(C))|T],Lie,Lpt,Li,Lu,LsNew) :-concatene([(I,not(C))],Ls,LsNew), tri_Abox(T,Lie,Lpt,Li,Lu,Ls),!.
 % concept -> Ls
+% Si une expression de type (I,C) est rencontre on lajoute à Ls
 tri_Abox([(I,C)|T],Lie,Lpt,Li,Lu,LsNew) :- concatene([(I,C)],Ls,LsNew), tri_Abox(T,Lie,Lpt,Li,Lu,Ls),!.
 
 
-% affiche/1: predicat qui affiche une liste d assertions
+% Predicat qui affiche une liste d assertions
 affiche([]).
 affiche([A|L]):- affiche(A),affiche(L).
 affiche((A,B,R)) :- nl,write("<"),write(A),write(","),write(B),write("> : "),write(R).
@@ -409,6 +416,8 @@ affiche(not(C)) :- write("¬"),affiche(C).
 affiche(C) :- write(C).
 
 % affiche_evolution_Abox/12 : Affiche l évolution de la Abox étendue
+% Il sagit dutiliser le prédicat affiche définie ci-dessus afin d afficher l etat de
+% la Abox avant et après la résolution en utilisant la methode des tableaux sémantiques
 affiche_evolution_Abox(Ls, Lie, Lpt, Li, Lu, Abr, Ls1, Lie1, Lpt1, Li1, Lu1, Abr1) :- write("---État de départ de la Abox---"),
                                                                                       affiche(Ls),
                                                                                       affiche(Lie),
@@ -427,7 +436,8 @@ affiche_evolution_Abox(Ls, Lie, Lpt, Li, Lu, Abr, Ls1, Lie1, Lpt1, Li1, Lu1, Abr
 
 
 %%% test_clash/1 : retourne vrai si pas de clash dans la liste, faux sinon
-% Idée : vérifier si un concept C est dans le tableau quon developpe, verifier si nnf(C) y est aussi
+% Idée : Si un concept C est dans le tableau quon developpe, verifier si nnf(C) y est aussi
+% Si oui alors clash, sinon pas de clash
 test_clash([]).
 test_clash([(I,C)|T]) :- nnf(not(C),Cnnf), not(member((I,Cnnf),T)), test_clash(T).
 
@@ -456,8 +466,7 @@ generer(B):- random(10,100000,B).
 
 /*
 Ce prédicat cherche une assertion de concept de la forme (I,some(R,C)) dans la liste Lie. 
-S’il  en  trouve  une,  il  cherche  à  appliquer  la  règle  ∃  (voir  le  schéma  de  la  boucle  de 
-contrôle présenté plus haut, qui permet de comprendre la structure de ce prédicat).
+S’il  en  trouve  une,  il  cherche  à  appliquer  la  règle  ∃
 */
 complete_some([(I,some(R,C))|Tie],Lpt,Li,Lu,Ls,Abr) :- generer(B), /*on cree un nouvel objet B*/
                                                        concatene([(I,B,R)],Abr,AbrNew), /*on ajoute (I,B,R) dans Abr*/
