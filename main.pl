@@ -8,23 +8,66 @@
 
 % ____________________________________________________________________________________________________________________
 
-programme :-
-    nl, write('M1 DAC - PROJET LRC - Samy NEHLIL et Allaa BOUTALEB'), nl,
-
-    nl, write('_______________________________________ Premiere partie _______________________________________'), nl,
-    premiere_etape(TBox, Abi, Abr),
-
-    nl, write('_______________________________________ Deuxieme partie _______________________________________'), nl,
-    deuxieme_etape(Abi, Abi1, Tbox),
-
-    nl, write('_______________________________________ Troisieme partie ______________________________________'), nl,
-    troisieme_etape(Abi1, Abr).
 
 % ____________________________________________________________________________________________________________________
 
 % PARTIE 1
 
 % ____________________________________________________________________________________________________________________
+
+%  TBox
+
+% Le prédicat ci-dessus signifie qu un sculpteur est équivalent à une personne ayant crée une sculpture
+equiv(sculpteur,and(personne,some(aCree,sculpture))).
+equiv(auteur,and(personne,some(aEcrit,livre))).
+equiv(editeur,and(personne,and(not(some(aEcrit,livre)),some(aEdite,livre)))).
+equiv(parent,and(personne,some(aEnfant,anything))).
+% equiv(sculpture,and(objet,all(cree_par,sculpteur))).
+
+
+cnamea(personne).
+cnamea(livre).
+cnamea(objet).
+cnamea(anything).
+cnamea(nothing).
+
+
+
+cnamena(auteur).
+cnamena(editeur).
+cnamena(sculpteur).
+cnamena(parent).
+cnamea(sculpture).
+
+iname(michelAnge).
+iname(david).
+iname(sonnets).
+iname(vinci).
+iname(joconde).
+
+rname(aCree).
+rname(aEcrit).
+rname(aEdite).
+rname(aEnfant).
+rname(cree_par).
+
+% ___________________________________________________________________________________________
+
+
+%  ABox
+
+% ABox dinstances Abi
+inst(michelAnge,personne). % Signifie que Michel-Ange est une personne
+inst(david,sculpture).
+inst(sonnets,livre).
+inst(vinci,personne).
+inst(joconde,objet).
+inst(socrate,personne).
+
+% ABox de relations Abr
+instR(michelAnge, david, aCree). % Signifie que Michel-Ange a créé David
+instR(michelAnge, sonnets, aEcrit).
+instR(vinci, joconde, aCree).
 
 % Cette methode permet de creer des listes qui vont contenir la TBox, la ABox d instances et la ABox de rôles.
 % Ces listes evolueront au fur et à mesure qu on soumettra des propositions à la démonstration.
@@ -43,7 +86,9 @@ premiere_etape(Tbox, Abi, Abr) :-
     traitement_Tbox(Tbox, Tbox1, Tbox),
     nl, write("Traitement de la Tbox realise avec succes"),
     nl, traitement_Abox(Abi, Abi1, Abr, Abr2, Tbox),
-    nl, write("Traitement de la Abox realise avec succes").
+    nl, write("Traitement de la Abox realise avec succes"),
+    nl, write("Traitement de la Tbox et de la Abox realise avec succes"),
+    nl, write("FIN DE LA PREMIERE PARTIE AVEC SUCCES").
 
 % ____________________________________________________________________________________________________________________
 
@@ -85,9 +130,11 @@ suite(R,Abi,Abi1,Tbox) :-
 % On met en place les methodes utilisées plus haut
 % ____________________________________________________________________________________________________________________
 
-/*concat/3 : concatene les deux listes L1 et L2 dans L3.*/
+% concat/3 : concatene les deux listes L1 et L2 dans L3
 concatene([],L1,L1).
 concatene([X|Y],L1,[X|L2]) :- concatene(Y,L1,L2).
+
+rev([I|C],(I,Ctraitennf)) :- replace_concept_na(C,Ctraite), nnf(not(Ctraite),Ctraitennf).
 
 % Méthode permettant l acquisition de propositions du type 1 (I : C)
 acquisition_prop_type1(Abi,Abi1,Tbox) :-
@@ -103,7 +150,7 @@ acquisition_prop_type1(Abi,Abi1,Tbox) :-
     nl, read(C),
 
     % On effectue une vérification sur le concept
-    % verificationConcept(C)
+    % concept(C)
 
     % On effectue les manipulations sur le concept
     % On le remplace (RC) puis on effectue sa négation (NRC)
@@ -112,91 +159,50 @@ acquisition_prop_type1(Abi,Abi1,Tbox) :-
     % On ajoute l élément (I, Ctraitennf) à la ABox
     concatene([Ctraitennf], Abi,Abi1).
 
-rev([I|C],(I,Ctraitennf)) :- replace_concept_na(C,Ctraite), nnf(not(Ctraite),Ctraitennf).
-% ____________________________________________________________________________________________________________________
+
 % Méthode permettant l acquisition de proposition du type 2 :
-% ____________________________________________________________________________________________________________________
 acquisition_prop_type2(Abi,Abi1,Tbox) :-
     % On entre le concept 1
     nl, write('Veuillez entrer le concept 1 :'),
     nl, read(C1),
+    concept(C1),
+
 
     % On entre le concept 2
     nl, write('Veuillez entrer le concept 2 :'),
     nl, read(C2),
 
     % On effectue une vérification sur les deux concepts
-    verification_type2([C1,C2]),
+    concept(C2),
+    nl, write('Etape concept passee'),
 
     % On effectue les manipulations sur les concepts
     % On effectue le remplacement (RC) puis on on effectue sa négation (NRC)
-    traitement_Tbox([C1,C2], (C1traite_n, C2traite_n)),
+
+    traitement([C1,C2],(C1traite,C2traite)),
+
 
     % On génère une instance et on ajoute l élément (I : C1 and C2) à la ABox
     genere(Inst),
     concatene([(Inst,and(C1traite,C2traite))],Abi,Abi1).
 
-% ##########################################################################################
+
+% Traitement sémantique de la Tbox (prédicat traitement)
+traitement([],(_,_)).
+traitement([C2],(_,C2traite)) :- replace_concept_na([C2],C2traite), !.
+traitement([C1|C2],(C1traite_n,C2traite_n)) :- replace_concept_na([C1],C1traite),
+                                            traitement(C2,(C1traite,C2traite)),
+                                            nnf(C1traite, C1traite_n),
+                                            nnf(C2traite, C2traite_n).
+
+% __________________________________________________________________________________________
 
 % PARTIE I :  PREPARATION
 
-% ##########################################################################################
-
-/* 
-  TBox
-*/
-% Le prédicat ci-dessus signifie qu un sculpteur est équivalent à une personne ayant crée une sculpture
-equiv(sculpteur,and(personne,some(aCree,sculpture))).
-equiv(auteur,and(personne,some(aEcrit,livre))).
-equiv(editeur,and(personne,and(not(some(aEcrit,livre)),some(aEdite,livre)))).
-equiv(parent,and(personne,some(aEnfant,anything))).
-% sculpture ≡ objet ⊓ ∀cree_par.sculpteur : tester le prédicat autoref
-% equiv(sculpture,and(objet,all(cree_par,sculpteur))).
+% __________________________________________________________________________________________
 
 
-cnamea(personne).
-cnamea(livre).
-cnamea(objet).
-cnamea(sculpture).
-cnamea(anything).
-cnamea(nothing).
-
-cnamena(auteur).
-cnamena(editeur).
-cnamena(sculpteur).
-cnamena(parent).
-
-iname(michelAnge).
-iname(david).
-iname(sonnets).
-iname(vinci).
-iname(joconde).
-
-rname(aCree).
-rname(aEcrit).
-rname(aEdite).
-rname(aEnfant).
-rname(cree_par).
-
-% ------------------------------------------------------------------------------------------
-
-/*
-  ABox
-*/
-% ABox dinstances Abi
-inst(michelAnge,personne). % Signifie que Michel-Ange est une personne
-inst(david,sculpture).
-inst(sonnets,livre).
-inst(vinci,personne).
-inst(joconde,objet).
-inst(socrate,personne).
-
-% ABox de relations Abr
-instR(michelAnge, david, aCree). % Signifie que Michel-Ange a créé David
-instR(michelAnge, sonnets, aEcrit).
-instR(vinci, joconde, aCree).
-
-% ------------------------------------------------------------------------------------------
+% ___________________________________________________________________________________________
 
 % Règles de mises sous forme normale négative (nnf) donnée dans lénoncé
 nnf(not(and(C1,C2)),or(NC1,NC2)) :- nnf(not(C1),NC1),
@@ -213,11 +219,12 @@ nnf(some(R,C),some(R,NC)) :- nnf(C,NC),!.
 nnf(all(R,C),all(R,NC)) :- nnf(C,NC),!.
 nnf(X,X).
 
-% ------------------------------------------------------------------------------------------
+% ___________________________________________________________________________________________
 
 % Règles de création de concepts : prédicat concept
 
 % Verification syntaxique et semantique
+/*
 concept([not(C)|_]) :- concept([C]),!.
 concept([and(C1,C2)|_]) :- concept([C1]),concept([C2]),!.
 concept([or(C1,C2)|_]) :- concept([C1]),concept([C2]),!.
@@ -225,6 +232,7 @@ concept([some(R,C)|_]) :- rname(R),concept([C]),!.
 concept([all(R,C)|_]) :- rname(R),concept([C]),!.
 concept([C|_]) :- setof(X,cnamea(X),L),member(C,L),!.
 concept([C|_]) :- setof(X,cnamena(X),L),member(C,L),!.
+*/
 
 concept(C) :- cnamea(C),!.
 concept(C) :- cnamena(C),!.
@@ -234,12 +242,12 @@ concept(or(C1,C2)) :- concept(C1), concept(C2),!.
 concept(some(R,C)) :- rname(R), concept(C),!.
 concept(all(R,C)) :- rname(R), concept(C),!.
 
-% ------------------------------------------------------------------------------------------
+% ___________________________________________________________________________________________
 
 % Prédicat prédéfini testant l appartenance d un élément X à une liste L
 % member(X, L).
 
-% ------------------------------------------------------------------------------------------
+% ___________________________________________________________________________________________
 
 % Règles de remplacement des concepts non atomiques par leur définition (replace_concept_na)
 replace_concept_na([not(C)|_],not(Ctraite)) :- replace_concept_na([C],Ctraite).
@@ -250,7 +258,7 @@ replace_concept_na([all(R,C)|_],all(R,Ctraite)) :- replace_concept_na([C],Ctrait
 replace_concept_na([C|_],C) :- cnamea(C), !.
 replace_concept_na([C|_],Ctraite) :- cnamena(C),equiv(C,Ctraite), !.
 
-% ------------------------------------------------------------------------------------------
+% ___________________________________________________________________________________________
 % remplace les concepts non atomiques par leur définition, met lexpression sous nnf
 transform(C, NC):-
     replace_concept_na(C, CA),
@@ -260,17 +268,13 @@ traitement_Tbox([], [], _).
 traitement_Tbox([(C, E)|L], [(C, E1)|L1], Tbox) :-
     cnamena(C),
     concept(E),
-    % nl,write(C),write("\t",E), % debug
-    %nl,write("pas concept"), % debug
     pas_autoref(C, E, Tbox),
-    %nl,write("pas autoref"), % debug
     transform([E], E1),
     traitement_Tbox(L, L1, Tbox),!.
 
 traitement_Abi([], [], _).
 traitement_Abi([(I, C)|L], [(I, C1)|L1], Tbox) :-
     concept(C),
-    nl,write("concept"),
     transform([C], C1),
     traitement_Abi(L, L1, Tbox),!.
 
@@ -286,7 +290,9 @@ traitement_Abox(Abi, Abi1, Abr, Abr1, Tbox) :-
     nl, write("Traitement Abi avec succes"),nl,
     traitement_Abr(Abr, Abr1, Tbox),
     nl, write("Traitement Abr avec succes").
+
 % ________________________________________________________________________________________
+
 % Prédicat qui retourne dans Y le concept non atomique utilisé dans la définition de X
 % utile dans pas_autoref
 retrieve_na(X, X, _) :- 
@@ -296,6 +302,7 @@ retrieve_na(X, Y, [(C, _)|L]) :-
     X \= C, 
     retrieve_na(X, Y, L).
 
+% pas_autoref/3 : verifie si la Tbox ne contient pas des concepts autoreferences
 pas_autoref(_, E, _) :-
     % Si prédicat utilisé dans la définition est atomique, retourne vrai car cycle impossible
     cnamea(E), !.
@@ -325,12 +332,13 @@ pas_autoref(C, all(_, C1), Tbox) :-
     C \= C1,
     pas_autoref(C, C1, Tbox).
 
-% ------------------------------------------------------------------------------------------
+% ___________________________________________________________________________________________
+
 % Prédicat réalisant la suppression de X de la liste L1 et renvoie la liste résultante L2
 enleve(X,[X|L],L) :- !.
 enleve(X,[Y|L],[Y|L2]) :- enleve(X,L,L2).
 
-% ------------------------------------------------------------------------------------------
+% ___________________________________________________________________________________________
 
 % Prédicat compteur et prédicat de génération d un nouvel identificateur 
 % qui est fourni en sortie dans Nom
@@ -364,22 +372,21 @@ chiffre_car(7,'7').
 chiffre_car(8,'8').
 chiffre_car(9,'9').
 
-% ------------------------------------------------------------------------------------------
-% Vérification des données en entrée
-% ------------------------------------------------------------------------------------------
-% ##########################################################################################
+% ___________________________________________________________________________________________
 
 %  PARTIE III : DEMONSTRATION DE LA PROPOSITION
 
-% ##########################################################################################
+% ___________________________________________________________________________________________
 
-troisieme_etape(Abi,Abr) :- tri_Abox(Abi,Lie,Lpt,Li,Lu,Ls),
-                            write("Debut de la resolution\n"),
+troisieme_etape(Abi,Abr) :- 
+                            tri_Abox(Abi,Lie,Lpt,Li,Lu,Ls),
                             resolution(Lie,Lpt,Li,Lu,Ls,Abr),
-                            nl, write('Demonstration reussite ~~').
+                            nl,write('Youpiiiiii, on a demontre la proposition initiale !!!').
+
 
 % Le prédicat tri_Abox, à partir de la liste des assertions de concepts de la Abox étendue 
-tri_Abox([],[],[],[],[],[]). /*cas d arrêt*/
+% Cas d arret
+tri_Abox([],[],[],[],[],[]).
 % some -> Lie
 tri_Abox([(I,some(R,C))|T],LieNew,Lpt,Li,Lu,Ls) :- concatene([(I,some(R,C))],Lie,LieNew), tri_Abox(T,Lie,Lpt,Li,Lu,Ls),!.
 % all -> Lpt
@@ -395,28 +402,44 @@ tri_Abox([(I,C)|T],Lie,Lpt,Li,Lu,LsNew) :- concatene([(I,C)],Ls,LsNew), tri_Abox
 
 
 % affiche/1: predicat qui affiche une liste d assertions
+% Utile pour le prédicat affiche_evolution_Abox demandé
+/*
 affiche([]).
 affiche([A|L]):- affiche(A),affiche(L).
 affiche((A,B,R)) :- nl,write("<"),write(A),write(","),write(B),write("> : "),write(R).
-affiche((I,or(C1,C2))) :- nl,write(I),write(" : "), affiche(C1),write(" ⊔ "),affiche(C2).
-affiche((I,and(C1,C2))) :- nl,write(I),write(" : "), affiche(C1),write(" ⊓ "),affiche(C2).
+affiche((I,or(C1,C2))) :- nl,write(I),write(" : "), affiche(C1),writef(" ⊔ "),affiche(C2).
+affiche((I,and(C1,C2))) :- nl,write(I),write(" : "), affiche(C1),writef(" ⊓ "),affiche(C2).
 affiche((I,C)) :- nl,write(I), write(" : "), affiche(C).
-affiche(or(C1,C2)) :- write("("),affiche(C1),write(" ⊔ "),affiche(C2),write(")").
-affiche(and(C1,C2)) :- write("("),affiche(C1),write(" ⊓ "),affiche(C2),write(")").
-affiche(all(R,C)) :- write("∀"),write(R),write("."),affiche(C).
-affiche(some(R,C)) :- write("∃"), write(R), write("."), affiche(C).
-affiche(not(C)) :- write("¬"),affiche(C).
+affiche(or(C1,C2)) :- write("("),affiche(C1),writef(" ⊔ "),affiche(C2),write(")").
+affiche(and(C1,C2)) :- write("("),affiche(C1),writef(" ⊓ "),affiche(C2),write(")").
+affiche(all(R,C)) :- writef("∀"),write(R),write("."),affiche(C).
+affiche(some(R,C)) :- writef("∃"), write(R), write("."), affiche(C).
+affiche(not(C)) :- writef("¬"),affiche(C).
+affiche(C) :- write(C).
+*/
+
+affiche([]).
+affiche([A|L]):- affiche(A),affiche(L).
+affiche((A,B,R)) :- nl,write("<"),write(A),write(","),write(B),write("> : "),write(R).
+affiche((I,or(C1,C2))) :- nl,write(I),write(" : "), affiche(C1),write(" or "),affiche(C2).
+affiche((I,and(C1,C2))) :- nl,write(I),write(" : "), affiche(C1),write(" and "),affiche(C2).
+affiche((I,C)) :- nl,write(I), write(" : "), affiche(C).
+affiche(or(C1,C2)) :- write("("),affiche(C1),write(" or "),affiche(C2),write(")").
+affiche(and(C1,C2)) :- write("("),affiche(C1),write(" and "),affiche(C2),write(")").
+affiche(all(R,C)) :- write("All."),write(R),write("."),affiche(C).
+affiche(some(R,C)) :- write("Some."), write(R), write("."), affiche(C).
+affiche(not(C)) :- write("Not."),affiche(C).
 affiche(C) :- write(C).
 
 % affiche_evolution_Abox/12 : Affiche l évolution de la Abox étendue
-affiche_evolution_Abox(Ls, Lie, Lpt, Li, Lu, Abr, Ls1, Lie1, Lpt1, Li1, Lu1, Abr1) :- write("---État de départ de la Abox---"),
+affiche_evolution_Abox(Ls, Lie, Lpt, Li, Lu, Abr, Ls1, Lie1, Lpt1, Li1, Lu1, Abr1) :- write("---Etat de depart de la Abox---"),
                                                                                       affiche(Ls),
                                                                                       affiche(Lie),
                                                                                       affiche(Lpt),
                                                                                       affiche(Li),
                                                                                       affiche(Lu),
                                                                                       affiche(Abr),
-                                                                                      nl,nl,write("---Etat d'arrivée---"),
+                                                                                      nl,nl,write("---Etat d'arrivee---"),
                                                                                       affiche(Ls1),
                                                                                       affiche(Lie1),
                                                                                       affiche(Lpt1),
@@ -426,12 +449,12 @@ affiche_evolution_Abox(Ls, Lie, Lpt, Li, Lu, Abr, Ls1, Lie1, Lpt1, Li1, Lu1, Abr
                                                                                       nl,write("=======FIN========"),nl,!.
 
 
-%%% test_clash/1 : retourne vrai si pas de clash dans la liste, faux sinon
-% Idée : vérifier si un concept C est dans le tableau quon developpe, verifier si nnf(C) y est aussi
+% test_clash/1 : retourne vrai si pas de clash dans la liste, faux sinon
+% Idée : Si un concept C est dans le tableau qu on developpe, verifier si nnf(C) y est aussi
 test_clash([]).
 test_clash([(I,C)|T]) :- nnf(not(C),Cnnf), not(member((I,Cnnf),T)), test_clash(T).
 
-%%% Prédicat résolution
+% Prédicat résolution
 % Règle IL EXISTE
 resolution(Lie,Lpt,Li,Lu,Ls,Abr) :- not(length(Lie,0)), test_clash(Ls), write("\nAppel de complete_some\n"),  complete_some(Lie,Lpt,Li,Lu,Ls,Abr).
 % règle ET
@@ -441,9 +464,9 @@ resolution(Lie,Lpt,Li,Lu,Ls,Abr) :- not(length(Lpt,0)), test_clash(Ls), write("\
 % règle OU
 resolution(Lie,Lpt,Li,Lu,Ls,Abr) :- not(length(Lu,0)), test_clash(Ls), write("\nAppel de transformation_or \n"), transformation_or(Lie,Lpt,Li,Lu,Ls,Abr). 
 
-resolution([],[],[],[],Ls,Abr) :- not(test_clash(Ls)), write("\nBranche fermée !!\n").
+resolution([],[],[],[],Ls,Abr) :- not(test_clash(Ls)), write("\nBranche fermee !!\n").
 
-/*evolue/11 : màj des listes de Abe*/
+% evolue/11 : maj des listes de Abe
 evolue((I,some(R,C)),Lie,Lpt,Li,Lu,Ls,Lie1,Lpt,Li,Lu,Ls) :- concatene([(I,some(R,C))],Lie,Lie1),!.
 evolue((I,and(C1,C2)),Lie,Lpt,Li,Lu,Ls,Lie,Lpt,Li1,Lu,Ls) :- concatene([(I,and(C1,C2))],Li,Li1),!.
 evolue((I,or(C1,C2)),Lie,Lpt,Li,Lu,Ls,Lie,Lpt,Li,Lu1,Ls) :- concatene([(I,or(C1,C2))],Lu,Lu1),!.
@@ -454,16 +477,17 @@ evolue((I,C),Lie,Lpt,Li,Lu,Ls,Lie,Lpt,Li,Lu,Ls1):- concatene([(I,C)],Ls,Ls1),!.
 
 generer(B):- random(10,100000,B).
 
-/*
-Ce prédicat cherche une assertion de concept de la forme (I,some(R,C)) dans la liste Lie. 
-S’il  en  trouve  une,  il  cherche  à  appliquer  la  règle  ∃  (voir  le  schéma  de  la  boucle  de 
-contrôle présenté plus haut, qui permet de comprendre la structure de ce prédicat).
-*/
+
+% Ce prédicat cherche une assertion de concept de la forme (I,some(R,C)) dans la liste Lie. 
+% S’il  en  trouve  une,  il  cherche  à  appliquer  la  règle  ∃  (voir  le  schéma  de  la  boucle  de 
+% contrôle présenté plus haut, qui permet de comprendre la structure de ce prédicat).
+
 complete_some([(I,some(R,C))|Tie],Lpt,Li,Lu,Ls,Abr) :- generer(B), /*on cree un nouvel objet B*/
                                                        concatene([(I,B,R)],Abr,AbrNew), /*on ajoute (I,B,R) dans Abr*/
                                                        evolue((B,C),Tie,Lpt,Li,Lu,Ls,Lie1,Lpt1,Li1,Lu1,Ls1), /*l ajout de (B,C) depend de la nature de C*/
                                                        affiche_evolution_Abox(Ls,[(I,some(R,C))|Tie], Lpt, Li, Lu ,Abr, Ls1, Lie1, Lpt1, Li1, Lu1, AbrNew),
                                                        resolution(Lie1,Lpt1,Li1,Lu1,Ls1,AbrNew). /*on boucle*/
+
 
 
 transformation_and(Lie,Lpt,[(I,and(C1,C2))|Ti],Lu,Ls,Abr) :- evolue((I,C1),Lie,Lpt,Ti,Lu,Ls,Lie1,Lpt1,Li1,Lu1,Ls1), /*ajout de (I,C1)*/
@@ -487,3 +511,19 @@ transformation_or(Lie,Lpt,Li,[(I,or(C1,C2))|Tu],Ls,Abr) :- evolue((I,C1),Lie,Lpt
                                                            affiche_evolution_Abox(Ls,Lie,Lpt, Li, [(I,or(C1,C2))|Tu] , Abr, Ls1d, Lie1d,Lpt1d,Li1d,Lu1d, Abr),
                                                            resolution(Lie1g,Lpt1g,Li1g,Lu1g,Ls1g,Abr), /*fils gauche*/
                                                            resolution(Lie1d,Lpt1d,Li1d,Lu1d,Ls1d,Abr). /*fils droit*/
+
+% ____________________________________________________________________________________________________________________
+
+programme :-
+    nl, write('M1 DAC - PROJET LRC - Samy NEHLIL et Allaa BOUTALEB'), nl,
+
+    nl, write('_______________________________________ Premiere partie _______________________________________'), nl,
+    premiere_etape(TBox, Abi, Abr),
+
+    nl, write('_______________________________________ Deuxieme partie _______________________________________'), nl,
+    deuxieme_etape(Abi, Abi1, Tbox),
+
+    nl, write('_______________________________________ Troisieme partie ______________________________________'), nl,
+    troisieme_etape(Abi1, Abr).
+
+% ____________________________________________________________________________________________________________________
